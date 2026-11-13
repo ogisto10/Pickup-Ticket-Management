@@ -1,0 +1,12 @@
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\bin\Debug\net8.0\PickupManagement.Domain.deps.json
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\bin\Debug\net8.0\PickupManagement.Domain.dll
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\bin\Debug\net8.0\PickupManagement.Domain.pdb
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.AssemblyInfoInputs.cache
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.AssemblyInfo.cs
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.csproj.CoreCompileInputs.cache
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.sourcelink.json
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.dll
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\refint\PickupManagement.Domain.dll
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\PickupManagement.Domain.pdb
+D:\Dozani\My Project\Pickup-Ticket-Management\PickupManagement\PickupManagement.Domain\obj\Debug\net8.0\ref\PickupManagement.Domain.dll

@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "zOHhStLP4AAsBzwSwDnfrijejDid1T+t+oFa4aRYvbA=",
+  "Source": "PickupManagement.Api",
+  "BasePath": "_content/PickupManagement.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
