@@ -1,0 +1,54 @@
+<div class="flex flex-column gap-4">
+  <div class="flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h2 class="m-0 text-2xl font-bold text-900">Operational Dashboard</h2>
+      <p class="m-0 text-600 text-sm">
+        Welcome, {{ user()?.fullName }}. Live pickup summary for {{ stats()?.date || 'today' }}.
+      </p>
+    </div>
+    <div class="flex align-items-center gap-2">
+      <p-tag
+        *ngIf="(stats()?.integrationAttentionCount ?? 0) > 0"
+        [value]="stats()!.integrationAttentionCount + ' AX reconciliation alert(s)'"
+        severity="danger"
+      ></p-tag>
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        size="small"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="loadStats()"
+      ></p-button>
+    </div>
+  </div>
+
+  <div class="grid" *ngIf="stats() as s">
+    <div class="col-12 md:col-6 lg:col-3">
+      <p-card header="Planned Today">
+        <div class="text-4xl font-bold text-primary">{{ s.plannedCount }}</div>
+        <div class="text-xs text-500 mt-1">Awaiting arrival at reception</div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-6 lg:col-3">
+      <p-card header="Awaiting Credit">
+        <div class="text-4xl font-bold text-orange-500">{{ s.awaitingCreditCount }}</div>
+        <div class="text-xs text-500 mt-1">On hold / rejected: {{ s.onHoldOrRejectedCount }}</div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-6 lg:col-3">
+      <p-card header="In Preparation">
+        <div class="text-4xl font-bold text-blue-500">{{ s.inPreparationCount }}</div>
+        <div class="text-xs text-500 mt-1">Active warehouse preparation</div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-6 lg:col-3">
+      <p-card header="Ready / Collected">
+        <div class="text-4xl font-bold text-green-600">
+          {{ s.readyCount }} / {{ s.collectedCount }}
+        </div>
+        <div class="text-xs text-500 mt-1">Absent plans: {{ s.absentCount }}</div>
+      </p-card>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,193 @@
+<div class="flex flex-column gap-4">
+  <div class="flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h2 class="m-0 text-2xl font-bold text-900">
+        {{ editPlanId() ? 'Edit Pickup Plan' : 'Plan a Client Pickup' }}
+      </h2>
+      <p class="m-0 text-600 text-sm">
+        Search customer in AX and select eligible sales orders for pickup.
+      </p>
+    </div>
+    <p-button
+      label="Back to Plans"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      routerLink="/planning"
+    ></p-button>
+  </div>
+
+  <p-card>
+    <form [formGroup]="form" (ngSubmit)="savePlan()" class="flex flex-column gap-4">
+      <div class="grid">
+        <div class="col-12 md:col-4 flex flex-column gap-2">
+          <label for="pickupDate" class="font-semibold text-sm text-700">Pickup Date</label>
+          <p-calendar
+            inputId="pickupDate"
+            formControlName="pickupDate"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            (onSelect)="reloadOrdersIfCustomerSelected()"
+          ></p-calendar>
+        </div>
+
+        <div class="col-12 md:col-4 flex flex-column gap-2">
+          <label for="warehouseId" class="font-semibold text-sm text-700">Warehouse</label>
+          <input
+            id="warehouseId"
+            type="text"
+            pInputText
+            formControlName="warehouseId"
+            class="w-full"
+            (blur)="reloadOrdersIfCustomerSelected()"
+          />
+        </div>
+
+        <div class="col-12 md:col-4 flex flex-column gap-2">
+          <label for="customerSearch" class="font-semibold text-sm text-700">
+            Search Customer in AX
+          </label>
+          <p-autoComplete
+            inputId="customerSearch"
+            formControlName="selectedCustomer"
+            [suggestions]="customerSuggestions()"
+            (completeMethod)="onSearchCustomers($event)"
+            (onSelect)="onCustomerSelected($event.value)"
+            field="name"
+            [dropdown]="true"
+            [disabled]="!!editPlanId()"
+            placeholder="Account or name (e.g. 411)"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          >
+            <ng-template let-customer pTemplate="item">
+              <div class="flex justify-content-between align-items-center gap-2">
+                <span>
+                  <strong>{{ customer.accountNum }}</strong> — {{ customer.name }}
+                </span>
+                <p-tag
+                  *ngIf="!customer.isActive"
+                  value="Inactive"
+                  severity="danger"
+                ></p-tag>
+              </div>
+            </ng-template>
+          </p-autoComplete>
+        </div>
+      </div>
+
+      <p-message
+        *ngIf="alreadyPlannedForDate()"
+        severity="warn"
+        text="This customer already has an active pickup plan for the selected date."
+        styleClass="w-full"
+      ></p-message>
+
+      <p-message
+        *ngIf="selectedCustomerInfo() as cust"
+        severity="info"
+        [text]="'Selected AX Customer: ' + cust.accountNum + ' — ' + cust.name"
+        styleClass="w-full"
+      ></p-message>
+
+      <div class="flex flex-column gap-2">
+        <div class="flex justify-content-between align-items-center">
+          <h3 class="m-0 text-lg font-semibold text-900">Eligible AX Sales Orders</h3>
+          <span class="text-sm text-600">
+            Selected: {{ selectedSalesIds().size }} order(s)
+          </span>
+        </div>
+
+        <p-table
+          [value]="orders()"
+          [loading]="loadingOrders()"
+          styleClass="p-datatable-sm p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 3rem">Select</th>
+              <th>Sales Order</th>
+              <th>Order Date</th>
+              <th>Warehouse</th>
+              <th>AX Status</th>
+              <th>Amount</th>
+              <th>Eligibility</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-order>
+            <tr>
+              <td>
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="selectedSalesIds().has(order.salesId)"
+                  [ngModelOptions]="{ standalone: true }"
+                  [disabled]="isOrderDisabled(order)"
+                  (onChange)="toggleOrder(order.salesId, $event.checked)"
+                ></p-checkbox>
+              </td>
+              <td class="font-semibold">{{ order.salesId }}</td>
+              <td>{{ order.orderDate }}</td>
+              <td>{{ order.warehouseId }}</td>
+              <td>{{ order.axStatus }}</td>
+              <td>{{ order.totalAmount | number: '1.2-2' }} {{ order.currencyCode }}</td>
+              <td>
+                <div class="flex align-items-center gap-2 flex-wrap">
+                  <p-tag
+                    [value]="order.eligibilityStatus"
+                    [severity]="order.isEligible ? 'success' : 'danger'"
+                  ></p-tag>
+                  <p-tag
+                    *ngIf="order.isAlreadyPlanned && order.existingPlanId !== editPlanId()"
+                    value="Already planned"
+                    severity="warning"
+                  ></p-tag>
+                  <small *ngIf="order.ineligibilityReason" class="text-red-600">
+                    {{ order.ineligibilityReason }}
+                  </small>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center p-4 text-600">
+                Select an active AX customer to retrieve eligible sales orders.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="notes" class="font-semibold text-sm text-700">Notes (Optional)</label>
+        <textarea
+          id="notes"
+          pInputTextarea
+          rows="2"
+          formControlName="notes"
+          placeholder="Client pickup instructions or arrival notes"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [outlined]="true"
+          routerLink="/planning"
+        ></p-button>
+        <p-button
+          type="submit"
+          [label]="editPlanId() ? 'Save Changes' : 'Create Pickup Plan'"
+          icon="pi pi-check"
+          [loading]="saving()"
+          [disabled]="form.invalid || selectedSalesIds().size === 0 || saving()"
+        ></p-button>
+      </div>
+    </form>
+  </p-card>
+</div>

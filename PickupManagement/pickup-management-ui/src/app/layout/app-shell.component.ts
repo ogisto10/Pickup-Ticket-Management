@@ -35,65 +35,7 @@ const ALL_OPERATIONAL_ROLES: readonly AppRole[] = [
     ButtonModule,
     TagModule
   ],
-  template: `
-    <div class="layout-shell">
-      <p-toolbar styleClass="border-noround border-x-none border-top-none px-4 py-2 surface-card">
-        <div class="p-toolbar-group-start flex align-items-center gap-3">
-          <i class="pi pi-ticket text-primary text-2xl"></i>
-          <div>
-            <div class="font-bold text-900 text-lg">Client Pickup Ticket Management</div>
-            <div class="text-xs text-500" *ngIf="user()?.warehouseId">
-              Warehouse: {{ user()?.warehouseId }}
-            </div>
-          </div>
-        </div>
-
-        <div class="p-toolbar-group-end flex align-items-center gap-3" *ngIf="user() as currentUser">
-          <div class="text-right hidden sm:block">
-            <div class="font-semibold text-900 text-sm">{{ currentUser.fullName }}</div>
-            <div class="flex gap-1 justify-content-end mt-1">
-              <p-tag
-                *ngFor="let role of currentUser.roles"
-                [value]="role"
-                severity="info"
-                [rounded]="false"
-              ></p-tag>
-            </div>
-          </div>
-          <p-button
-            label="Sign out"
-            icon="pi pi-sign-out"
-            severity="secondary"
-            [outlined]="true"
-            size="small"
-            (onClick)="logout()"
-          ></p-button>
-        </div>
-      </p-toolbar>
-
-      <div class="layout-body">
-        <aside class="layout-sidebar p-3">
-          <div class="text-xs font-semibold text-500 uppercase mb-2 px-2">Navigation</div>
-          <nav class="flex flex-column gap-1">
-            <a
-              *ngFor="let item of visibleNavItems()"
-              [routerLink]="item.route"
-              routerLinkActive="bg-primary-50 text-primary font-semibold"
-              [routerLinkActiveOptions]="{ exact: item.route === '/planning' || item.route === '/reception' }"
-              class="flex align-items-center gap-2 px-3 py-2 border-round text-700 no-underline hover:surface-hover transition-colors transition-duration-150"
-            >
-              <i [class]="item.icon"></i>
-              <span>{{ item.label }}</span>
-            </a>
-          </nav>
-        </aside>
-
-        <main class="layout-content">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
-    </div>
-  `
+  templateUrl: './app-shell.component.html'
 })
 export class AppShellComponent {
   private readonly authService = inject(AuthService);

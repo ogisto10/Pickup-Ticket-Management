@@ -1,0 +1,117 @@
+<div class="flex flex-column gap-4">
+  <div class="flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h2 class="m-0 text-2xl font-bold text-900">Planned Pickups</h2>
+      <p class="m-0 text-600 text-sm">
+        Manage client pickup visits and assigned AX sales orders before arrival.
+      </p>
+    </div>
+    <p-button
+      label="New Pickup Plan"
+      icon="pi pi-plus"
+      routerLink="/planning/new"
+    ></p-button>
+  </div>
+
+  <p-card>
+    <div class="flex flex-wrap gap-3 align-items-end mb-4">
+      <div class="flex flex-column gap-2">
+        <label for="pickupDate" class="font-semibold text-sm text-700">Pickup Date</label>
+        <p-calendar
+          inputId="pickupDate"
+          [(ngModel)]="selectedDate"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          (onSelect)="loadPlans()"
+        ></p-calendar>
+      </div>
+
+      <div class="flex flex-column gap-2 flex-1" style="min-width: 240px;">
+        <label for="searchTerm" class="font-semibold text-sm text-700">Filter by customer or order</label>
+        <span class="p-input-icon-left w-full">
+          <i class="pi pi-search"></i>
+          <input
+            id="searchTerm"
+            type="text"
+            pInputText
+            [(ngModel)]="searchText"
+            placeholder="Customer account, name, or SO number"
+            class="w-full"
+          />
+        </span>
+      </div>
+
+      <p-button
+        label="Refresh"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="loading()"
+        (onClick)="loadPlans()"
+      ></p-button>
+    </div>
+
+    <p-table
+      [value]="filteredPlans()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      styleClass="p-datatable-sm p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Customer Account</th>
+          <th>Customer Name</th>
+          <th>Warehouse</th>
+          <th>Sales Orders</th>
+          <th>Status</th>
+          <th>Created By</th>
+          <th style="width: 8rem">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-plan>
+        <tr>
+          <td class="font-semibold">{{ plan.customerAccount }}</td>
+          <td>{{ plan.customerNameSnapshot }}</td>
+          <td>{{ plan.warehouseId }}</td>
+          <td>
+            <div class="flex flex-wrap gap-1">
+              <p-tag
+                *ngFor="let o of plan.orders"
+                [value]="o.salesId"
+                severity="secondary"
+              ></p-tag>
+            </div>
+          </td>
+          <td>
+            <p-tag
+              [value]="plan.status"
+              [severity]="statusSeverity(plan.status)"
+            ></p-tag>
+          </td>
+          <td>{{ plan.createdBy }}</td>
+          <td>
+            <p-button
+              *ngIf="plan.status === 'PLANNED'"
+              icon="pi pi-pencil"
+              label="Edit"
+              size="small"
+              [outlined]="true"
+              [routerLink]="['/planning', plan.id, 'edit']"
+            ></p-button>
+            <span *ngIf="plan.status !== 'PLANNED'" class="text-xs text-500">Locked</span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center p-4 text-600">
+            No pickup plans found for {{ formatDate(selectedDate) }}.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
