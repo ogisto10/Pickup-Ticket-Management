@@ -1,0 +1,768 @@
+### Technical specification — Client Pickup Ticket Management
+
+Technology: Angular + ASP.NET Core Web API + SQL Server + Dynamics AX 2012 R3 AIF/custom services.
+
+Your application will manage the entire client pickup process for one company and one warehouse. Each client receives one arrival ticket covering multiple sales orders, and the ticket progresses through credit validation, warehouse preparation, and collection.
+
+The key design decision is to keep the pickup workflow in a dedicated application while using AX 2012 R3 as the source of truth for customer accounts, sales orders, balances, and ERP transactions.
+
+### 1\. Overall architecture
+
+Angular frontend
+
+Commercial · Reception · Credit manager · Warehouse · Public queue display
+
+ASP.NET Core Web API
+
+Authentication · Business rules · Workflow · Validation · AX adapter · SignalR
+
+SQL Server
+
+Tickets, plans, history, integration logs
+
+AX 2012 R3 AIF
+
+Customers, orders, credit checks, release, status
+
+### Recommended deployment
+
+* Angular: hosted on IIS, accessible from authorized internal workstations.
+
+* ASP.NET Core API: hosted on an application server under IIS.
+
+* SQL Server: a dedicated application database, separate from the AX business database.
+
+* AX adapter: communicates with AX through custom AIF services and their supported endpoints.
+
+* SignalR: updates the queue display and operator screens in real time.
+
+* Background worker: retries failed integration calls, refreshes order status, and reconciles operations.
+
+Use the .NET version supported by your chosen hosting environment and deployment standards. The Angular application can evolve independently from the backend.
+
+### 2\. Business workflow
+
+```mermaid
+
+flowchart TD
+    A["Commercial plans client for tomorrow"] --> B["Select multiple AX sales orders"]
+    B --> C["Client arrives at reception"]
+    C --> D["Issue one daily ticket"]
+    D --> E["Credit manager processes queue"]
+    E --> F{"Payment and credit approved?"}
+    F -- No --> G["On hold / rejected with reason"]
+    G --> E
+    F -- Yes --> H["Release eligible sales orders in AX"]
+    H --> I["Warehouse prepares orders"]
+    I --> J{"All ticket orders ready?"}
+    J -- No --> I
+    J -- Yes --> K["Ticket becomes READY"]
+    K --> L["Display ticket number on pickup screen"]
+    L --> M["Confirm collection"]
+```
+
+### Rules to enforce
+
+* A client can have several sales orders under the same pickup plan and ticket.
+
+* A ticket is issued only once when reception confirms arrival.
+
+* Credit processing follows arrival order by default, with authorized hold/skip handling.
+
+* Every order must pass its own eligibility checks before being released in AX.
+
+* The ticket becomes `READY` only when every active order attached to it is ready.
+
+* The reception display shows only the ticket number and pickup instruction, not customer financial information.
+
+* Collection is recorded by an authorized employee.
+
+* Every decision, transition, failure, and retry is logged.
+
+A ticket-level credit approval should not bypass order-level AX restrictions. If an order cannot be released, the ticket remains blocked until the issue is resolved or an authorized employee removes that order under a defined business rule.
+
+### 3\. SQL Server database schema
+
+Create a dedicated database named `PickupManagementDB`. Store references to AX records rather than duplicating the ERP's customer and sales order master data.
+
+### 3.1 Entity relationships
+
+```mermaid
+
+erDiagram
+    PickupPlan ||--o{ PickupPlanOrder : contains
+    PickupPlan ||--o| PickupTicket : receives
+    PickupTicket ||--o{ PickupTicketOrder : tracks
+    PickupPlanOrder ||--o| PickupTicketOrder : linked_to
+    PickupTicket ||--o{ PickupWorkflowHistory : records
+    PickupTicket ||--o{ PickupNotification : displays
+    PickupTicketOrder ||--o{ OrderWorkflowHistory : records
+    IntegrationRequest ||--o{ IntegrationAttempt : retries
+```
+
+### 3.2 Tables and important fields
+
+The following is the recommended logical schema. Use `uniqueidentifier` for application IDs, `datetime2` for timestamps, and UTC for stored timestamps.
+
+### 1\. `PickupPlan`
+
+The commercial's planned client visit.
+
+| Column               | Type             | Notes                                          |
+| -------------------- | ---------------- | ---------------------------------------------- |
+| Id                   | uniqueidentifier | Primary key                                    |
+| CustomerAccount      | nvarchar(20)     | AX customer account                            |
+| CustomerNameSnapshot | nvarchar(150)    | Display snapshot                               |
+| PickupDate           | date             | Planned pickup date                            |
+| WarehouseId          | nvarchar(20)     | Configured warehouse                           |
+| Status               | varchar(20)      | PLANNED, ARRIVED, ABSENT, CANCELLED, COMPLETED |
+| Notes                | nvarchar(500)    | Optional                                       |
+| CreatedBy            | nvarchar(100)    | Authenticated user                             |
+| CreatedAt            | datetime2        | Creation timestamp                             |
+| UpdatedAt            | datetime2        | Last modification                              |
+
+### 2\. `PickupPlanOrder`
+
+Sales orders selected for the planned visit.
+
+| Column              | Type             | Notes                     |
+| ------------------- | ---------------- | ------------------------- |
+| Id                  | uniqueidentifier | Primary key               |
+| PickupPlanId        | uniqueidentifier | Foreign key               |
+| DataAreaId          | nvarchar(4)      | AX company                |
+| SalesId             | nvarchar(20)     | AX sales order ID         |
+| OrderStatusSnapshot | nvarchar(30)     | Optional display snapshot |
+| AddedAt             | datetime2        | Timestamp                 |
+| AddedBy             | nvarchar(100)    | User                      |
+
+### 3\. `PickupTicket`
+
+One arrival ticket per client visit.
+
+| Column           | Type             | Notes                            |
+| ---------------- | ---------------- | -------------------------------- |
+| Id               | uniqueidentifier | Primary key                      |
+| PickupPlanId     | uniqueidentifier | Unique FK; one ticket per plan   |
+| TicketDate       | date             | Local business date              |
+| DailySequence    | int              | Monotonically increasing number  |
+| TicketNumber     | nvarchar(20)     | Example A-001                    |
+| ArrivalTime      | datetime2        | Arrival timestamp                |
+| QueueNumber      | int              | Immutable arrival order          |
+| Status           | varchar(30)      | Current ticket state             |
+| CreditDecisionBy | nvarchar(100)    | Credit operator                  |
+| CreditDecisionAt | datetime2        | Decision time                    |
+| CreditComment    | nvarchar(500)    | Decision reason                  |
+| ReadyAt          | datetime2        | When all active orders are ready |
+| CollectedAt      | datetime2        | Collection time                  |
+| RowVersion       | rowversion       | Optimistic concurrency           |
+
+### 4\. `PickupTicketOrder`
+
+Order-level state within the client's ticket.
+
+| Column            | Type             | Notes                                                                          |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------ |
+| Id                | uniqueidentifier | Primary key                                                                    |
+| TicketId          | uniqueidentifier | FK                                                                             |
+| PickupPlanOrderId | uniqueidentifier | FK                                                                             |
+| DataAreaId        | nvarchar(4)      | AX company                                                                     |
+| SalesId           | nvarchar(20)     | AX order reference                                                             |
+| Status            | varchar(30)      | PENDING_CREDIT, RELEASED, IN_PREPARATION, READY, BLOCKED, CANCELLED, COLLECTED |
+| CreditStatus      | varchar(20)      | PENDING, APPROVED, REJECTED, ON_HOLD                                           |
+| WarehouseStatus   | varchar(20)      | PENDING, PREPARING, READY, COLLECTED                                           |
+| LastAxSyncAt      | datetime2        | Last successful refresh                                                        |
+| RowVersion        | rowversion       | Concurrency                                                                    |
+
+### 5\. `PickupWorkflowHistory`
+
+Immutable ticket audit history.
+
+| Column        | Type             | Notes                             |
+| ------------- | ---------------- | --------------------------------- |
+| Id            | bigint identity  | Primary key                       |
+| TicketId      | uniqueidentifier | FK                                |
+| OldStatus     | varchar(30)      | Previous state                    |
+| NewStatus     | varchar(30)      | New state                         |
+| Action        | varchar(50)      | ARRIVAL, CREDIT_HOLD, READY, etc. |
+| Comment       | nvarchar(500)    | Reason or details                 |
+| UserId        | nvarchar(100)    | Authenticated actor               |
+| OccurredAt    | datetime2        | UTC timestamp                     |
+| CorrelationId | uniqueidentifier | Trace related calls               |
+
+### 6\. Integration and display tables
+
+`IntegrationRequest`
+
+* `Id`, `OperationKey`, `OperationType`, `EntityId`, `Status`, `AttemptCount`, `CreatedAt`, `CompletedAt`, `LastError`.
+
+* Unique `OperationKey` to prevent duplicate business operations.
+
+`IntegrationAttempt`
+
+\- `Id`, `IntegrationRequestId`, `StartedAt`, `FinishedAt`, `Outcome`, `ErrorCode`, `ErrorMessage`.
+
+`PickupNotification`
+
+\- `Id`, `TicketId`, `TicketNumber`, `DisplayEventType`, `CreatedAt`, `PublishedAt`, `Status`.
+
+`PickupSettings`
+
+\- `Id`, `WarehouseId`, `TicketPrefix`, `NextDailySequence`, `BusinessTimeZone`, `QueuePolicy`.
+
+### 3.3 Essential database constraints
+
+Create these constraints and indexes:
+
+* Unique `PickupPlanOrder(PickupPlanId, DataAreaId, SalesId)`.
+
+* Unique `PickupTicket(PickupPlanId)`.
+
+* Unique `PickupTicket(TicketDate, DailySequence)`.
+
+* Unique `PickupTicket(TicketDate, TicketNumber)`.
+
+* Unique `PickupTicketOrder(TicketId, DataAreaId, SalesId)`.
+
+* Unique `IntegrationRequest(OperationKey)`.
+
+* Index `PickupPlan(PickupDate, Status)`.
+
+* Index `PickupTicket(TicketDate, Status, QueueNumber)`.
+
+* Index `PickupTicketOrder(TicketId, Status)`.
+
+Use a database transaction when generating a ticket. Do not calculate the next number using `MAX(DailySequence) + 1` without locking, because two reception workstations could generate the same number simultaneously.
+
+Planning rule: enforce that a sales order is not assigned to two active pickup plans for the same company. Check this both in application logic and with a suitable database constraint or serialized assignment operation.
+
+### 4\. Angular application screens
+
+Use Angular standalone components, lazy-loaded routes, reactive forms, and a shared API service layer. Angular Material is a good starting point for tables, dialogs, forms, and status chips.
+
+### Route structure
+
+| Route            | Screen                         | Access                 |
+| ---------------- | ------------------------------ | ---------------------- |
+| /login           | Login                          | All users              |
+| /dashboard       | Operational dashboard          | All authorized users   |
+| /planning        | Planned pickups                | Commercial             |
+| /planning/new    | Create pickup plan             | Commercial             |
+| /reception       | Today's arrival list           | Reception              |
+| /reception/queue | Live ticket queue              | Reception, credit      |
+| /credit          | Credit validation workbench    | Credit manager         |
+| /warehouse       | Preparation workbench          | Warehouse              |
+| /pickup-display  | Public ticket display          | Display device         |
+| /history         | Search pickup history          | Authorized supervisors |
+| /admin/settings  | Queue and application settings | Administrator          |
+
+### Screen A — Commercial planning
+
+### Plan a client pickup
+
+Example screen specification
+
+Pickup date
+
+Tomorrow
+
+Warehouse
+
+Main warehouse
+
+Search customer in AX
+
+411-021 — Customer example
+
+Eligible sales orders
+
+SO-001258
+
+Order 1
+
+SO-001264
+
+Order 2
+
+SO-001275
+
+Order 3
+
+Example data only. The actual customer and orders must be retrieved from AX.
+
+Required behavior:
+
+* Search by customer account or name.
+
+* Retrieve eligible orders from AX.
+
+* Display order number, date, status, and any relevant eligibility information.
+
+* Select multiple orders for one client.
+
+* Save the plan and allow authorized edits before arrival.
+
+* Prevent duplicate active planning and reject ineligible orders.
+
+* Show whether the customer is already planned for the selected date.
+
+### Screen B — Reception and ticket issuance
+
+Reception needs a fast workflow with minimal clicks.
+
+* Display tomorrow's planned clients for the relevant date.
+
+* Search by account or customer name.
+
+* Confirm arrival.
+
+* Generate the ticket number automatically.
+
+* Print the ticket if a printer is available.
+
+* Display the ticket and queue position immediately.
+
+The same ticket must be returned if the reception user retries the same arrival request after a network timeout. This is why the arrival endpoint needs an idempotency key.
+
+### Screen C — Credit manager
+
+### Credit workbench
+
+Awaiting decision
+
+### A-021
+
+Queue #21
+
+### Customer 411-021
+
+3 sales orders · AX company configured for the application
+
+Customer balance
+
+### From AX
+
+Credit limit
+
+### From AX
+
+### Sales order eligibility
+
+SO-001258
+
+Eligible
+
+SO-001264
+
+Review required
+
+SO-001275
+
+Eligible
+
+Illustrative UI only. Values and eligibility must come from actual AX service responses.
+
+The credit manager can:
+
+* View the queue in ascending arrival order.
+
+* Call the next eligible ticket.
+
+* Review the customer's AX financial data and each associated sales order.
+
+* Approve, reject, or place an order on hold with a mandatory reason where appropriate.
+
+* Trigger release of eligible sales orders in AX.
+
+* See release results per order, including failures.
+
+For security, only the credit role should have permission to perform these operations. The frontend must not be trusted to enforce that permission.
+
+### Screen D — Warehouse preparation
+
+Display one row per ticket with customer account, ticket number, number of orders, and preparation progress.
+
+The warehouse operator opens a ticket, sees its sales orders, and updates the preparation status using authorized actions. The application should either receive status changes from AX or reconcile them through an AX service; it should not simply assume that clicking “Released” in the web application means AX has released the order.
+
+When all active orders are ready, the ticket transitions automatically to `READY` and publishes an event for the reception display.
+
+### Screen E — Reception display
+
+### CLIENT PICKUP
+
+Please proceed to the collection counter when your number appears.
+
+### NOW SERVING
+
+### A-021
+
+Please proceed to the pickup counter.
+
+### ORDERS READY
+
+### A-018
+
+Counter 1
+
+### A-020
+
+Counter 2
+
+Example display. Use synthetic ticket numbers in the public view; never expose customer names, account numbers, balances, or sales order details.
+
+The public display subscribes to a restricted SignalR event stream. It should reconnect automatically and retrieve the latest display state if the connection drops.
+
+### 5\. ASP.NET Core Web API design
+
+Organize the backend into separate layers so that AX-specific code does not leak into controllers.
+
+```text
+PickupManagement/
+├── PickupManagement.Api/
+│   ├── Controllers/
+│   ├── Hubs/
+│   ├── Middleware/
+│   └── Program.cs
+├── PickupManagement.Application/
+│   ├── Planning/
+│   ├── Reception/
+│   ├── Credit/
+│   ├── Warehouse/
+│   └── Tickets/
+├── PickupManagement.Domain/
+│   ├── Entities/
+│   ├── Enums/
+│   └── StateTransitions/
+├── PickupManagement.Infrastructure/
+│   ├── Persistence/
+│   ├── AxIntegration/
+│   ├── Notifications/
+│   └── BackgroundJobs/
+└── PickupManagement.Tests/
+```
+
+Use Entity Framework Core for the pickup database, dependency injection for services, structured logging, and centralized exception handling. Add Swagger/OpenAPI for endpoint documentation.
+
+### 5.1 Endpoint specification
+
+| Method | Endpoint                                       | Purpose                                 |
+| ------ | ---------------------------------------------- | --------------------------------------- |
+| GET    | /api/customers?search=411                      | Search AX customers                     |
+| GET    | /api/customers/{account}/sales-orders          | Retrieve eligible orders                |
+| POST   | /api/pickup-plans                              | Create a plan with multiple orders      |
+| GET    | /api/pickup-plans?date=2026-10-16              | List plans by date                      |
+| PUT    | /api/pickup-plans/{id}                         | Edit plan before arrival                |
+| POST   | /api/pickup-plans/{id}/arrival                 | Generate or retrieve the arrival ticket |
+| GET    | /api/tickets/queue?date=2026-10-16             | Retrieve the live queue                 |
+| GET    | /api/tickets/{id}                              | Get ticket and order details            |
+| POST   | /api/tickets/{id}/credit-decision              | Record credit decision                  |
+| POST   | /api/tickets/{id}/orders/{orderId}/release     | Release an eligible order through AX    |
+| POST   | /api/tickets/{id}/orders/{orderId}/preparation | Update preparation state                |
+| POST   | /api/tickets/{id}/orders/{orderId}/ready       | Confirm order readiness                 |
+| POST   | /api/tickets/{id}/collection                   | Confirm client collection               |
+| GET    | /api/dashboard/stats                           | Retrieve statistics                     |
+| GET    | /api/display/state                             | Retrieve public display state           |
+
+All write endpoints should accept an `Idempotency-Key` header or an equivalent request identifier. A retry must return the existing result instead of executing the same business operation again.
+
+### 5.2 Example request and response
+
+Create a pickup plan:
+
+```json
+{
+  "customerAccount": "411-021",
+  "pickupDate": "2026-10-16",
+  "warehouseId": "MAIN",
+  "salesOrders": [
+    "SO-001258",
+    "SO-001264",
+    "SO-001275"
+  ],
+  "notes": "Client pickup planned for tomorrow"
+}
+```
+
+The API should validate the customer and all three orders against AX before saving the plan.
+
+Example response:
+
+```json
+{
+  "id": "9f1a9d5d-9d92-4b78-b4d3-1b671d11b821",
+  "customerAccount": "411-021",
+  "pickupDate": "2026-10-16",
+  "status": "PLANNED",
+  "salesOrders": [
+    "SO-001258",
+    "SO-001264",
+    "SO-001275"
+  ]
+}
+```
+
+Example arrival response:
+
+```json
+{
+  "ticketId": "8f8a9d5d-9d92-4b78-b4d3-1b671d11b821",
+  "ticketNumber": "A-021",
+  "queueNumber": 21,
+  "status": "ARRIVED",
+  "arrivalTime": "2026-10-16T08:30:00Z"
+}
+```
+
+These are illustrative contracts. Use your actual AX customer account and sales order formats, and configure the correct local time zone for the warehouse.
+
+### 5.3 Credit decision contract
+
+```json
+{
+  "decision": "APPROVED",
+  "comment": "Payment verified",
+  "orders": [
+    {
+      "salesId": "SO-001258",
+      "approveForRelease": true
+    },
+    {
+      "salesId": "SO-001264",
+      "approveForRelease": false
+    },
+    {
+      "salesId": "SO-001275",
+      "approveForRelease": true
+    }
+  ]
+}
+```
+
+The backend must validate the authenticated user's role, the current ticket state, and each order's current AX eligibility. It then records the decision and requests release only for eligible, approved orders.
+
+A successful API response should distinguish between `APPROVED`, `RELEASE_PENDING`, and `RELEASED`. Do not report an order as released until AX confirms the result.
+
+### 6\. AX 2012 R3 integration
+
+This is the most important part because payment and sales order release must remain consistent with the ERP.
+
+### 6.1 Custom AX services
+
+Create a dedicated AX service group, for example `DOSI_PickupManagementServiceGroup`, containing services for customer/order lookup, credit information, release operations, and warehouse status.
+
+Suggested contracts:
+
+| AX service operation       | Input                      | Output                                       |
+| -------------------------- | -------------------------- | -------------------------------------------- |
+| GetCustomerForPickup       | Customer account           | Customer identity, active status             |
+| GetEligibleSalesOrders     | Customer, warehouse        | Sales orders and eligibility                 |
+| GetCustomerCreditInfo      | Customer account           | Balance, credit limit, relevant open items   |
+| ValidateOrderForRelease    | Sales order ID             | Eligibility and blocking reasons             |
+| ReleaseSalesOrderForPickup | Sales order ID, request ID | Release result, AX reference, error          |
+| GetSalesOrderPickupStatus  | Sales order IDs            | Current ERP and warehouse statuses           |
+| GetPickupIntegrationStatus | Request ID                 | Operation result and correlation information |
+
+Use serializable AX data contracts or AIF-compatible contract classes, with stable operation names and versioned request/response formats.
+
+### 6.2 Read operations
+
+The .NET API calls AX services to retrieve:
+
+* Customer account and display name.
+
+* Sales orders belonging to the customer.
+
+* Order status and warehouse/site.
+
+* Customer balance and credit limit.
+
+* Any existing AX block or release restriction.
+
+* Warehouse preparation or shipment status, according to your actual AX implementation.
+
+Do not assume that one AX field contains the complete credit decision. Your service must use the same business rules as the existing AX credit control and payment processes.
+
+For customer balance, you may need to reuse your established AX logic for operational and financial balances, rather than implementing a different calculation in the new application.
+
+### 6.3 Sales order release
+
+The credit manager's action should call a custom AX operation that:
+
+* Reloads the sales order and customer in AX.
+
+* Verifies that the order exists and belongs to the expected customer and company.
+
+* Checks the current financial and business restrictions.
+
+* Checks whether the order is already released.
+
+* Executes the appropriate existing AX release logic.
+
+* Returns a structured success or failure result.
+
+* Records the request ID for tracing and duplicate prevention.
+
+Do not implement release as a direct SQL update. Sales order release may involve AX business logic, reservations, warehouse processing, and other controls that must remain intact.
+
+The precise AX class and method used for release must be determined from your existing AX 2012 R3 customization and warehouse setup. A custom service should wrap the correct existing operation rather than bypassing it.
+
+### 6.4 AIF reliability and retries
+
+AX AIF calls may time out even if AX has completed the operation. The application therefore needs an integration workflow:
+
+```mermaid
+
+flowchart TD
+    A["Credit manager approves order"] --> B["Save decision and integration request"]
+    B --> C["Call AX custom service"]
+    C --> D{"Confirmed result?"}
+    D -- Yes --> E["Store AX result and update order state"]
+    D -- Timeout --> F["Mark status UNKNOWN / RECONCILING"]
+    D -- Business error --> G["Record error and require correction"]
+    F --> H["Query AX using request ID or order state"]
+    H --> I{"Operation completed in AX?"}
+    I -- Yes --> E
+    I -- No --> J["Retry only when safe"]
+```
+
+For reliable integration:
+
+* Persist the request before sending it to AX.
+
+* Use an operation ID that is also recognized or recorded by the AX service.
+
+* Use an outbox/background worker pattern to retry pending requests.
+
+* Query AX to resolve uncertain outcomes before resubmitting a release.
+
+* Keep technical failures separate from business rejections.
+
+* Log request ID, sales order ID, timestamps, and sanitized error details.
+
+* Alert an administrator when reconciliation cannot determine the outcome.
+
+A retry must not create duplicate financial or warehouse transactions.
+
+### 6.5 Warehouse preparation integration
+
+First establish how the warehouse actually processes orders in AX.
+
+If warehouse workers prepare orders in AX, the pickup application should read the real preparation status through a custom AX service or a reliable status synchronization process. The web application can record the pickup-specific workflow, but it must not falsely mark the AX order as prepared.
+
+If the warehouse will update preparation exclusively in the new application, define a supported AX operation for the required ERP changes and validate its impact on inventory, reservations, picking, and shipment processing before implementation.
+
+### 7\. Security and permissions
+
+Use corporate authentication if available; otherwise use ASP.NET Core Identity with secure password storage and role-based authorization.
+
+| Role               | Permissions                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| Commercial         | Create and edit pickup plans before arrival                    |
+| Reception          | Confirm arrivals, issue tickets, view queue                    |
+| Credit manager     | View financial data, decide credit, authorize release requests |
+| Warehouse operator | View authorized orders, update preparation status              |
+| Supervisor         | Monitor all operations, review history, resolve exceptions     |
+| Administrator      | Configure users, roles, warehouse, ticket numbering            |
+| Display device     | Read only public ticket display state                          |
+
+Additional security requirements:
+
+* Use HTTPS and secure authentication tokens or cookies.
+
+* Validate authorization on every backend endpoint.
+
+* Restrict AX service access to the application server and authorized service identity.
+
+* Keep passwords, AX credentials, and connection strings out of source control.
+
+* Record who approved, released, prepared, and collected each order.
+
+* Avoid exposing sensitive financial data to reception and public display users.
+
+* Apply retention rules to logs and customer-related data.
+
+### 8\. Business exceptions to handle
+
+| Situation                        | Expected behavior                                                     |
+| -------------------------------- | --------------------------------------------------------------------- |
+| Client arrives without a plan    | Allow only an authorized walk-in process                              |
+| Client arrives twice             | Return the existing active ticket                                     |
+| Sales order is cancelled in AX   | Flag it and prevent further release                                   |
+| Payment is not validated         | Keep the order blocked                                                |
+| AX service is unavailable        | Queue the request or show a pending status; never claim success       |
+| Only some orders are ready       | Keep the ticket in preparation                                        |
+| One order is blocked             | Keep that order blocked and apply the configured partial-order policy |
+| Client never arrives             | Mark the plan absent after the defined cutoff                         |
+| Client collects the products     | Record collection time and user                                       |
+| Ticket numbering resets next day | Start a new sequence without overwriting historical tickets           |
+
+I recommend one ticket per client, with order-level statuses. That lets the warehouse prepare several orders in parallel while the client receives a single arrival number.
+
+### 9\. Implementation plan
+
+01
+
+Foundation
+
+Create the SQL database, EF Core entities, migrations, authentication, roles, and initial Angular layout.
+
+Deliverable: application skeleton and user access.
+
+02
+
+AX integration
+
+Build and test the custom AX services for customer search, order lookup, credit information, and release. Confirm the correct release logic in your AX environment.
+
+Deliverable: working AX adapter with structured errors.
+
+03
+
+Planning and reception
+
+Implement the commercial planning screens, daily arrival queue, ticket generation, and concurrency protection.
+
+Deliverable: complete arrival workflow.
+
+04
+
+Credit and warehouse
+
+Implement credit decisions, AX release, order preparation, readiness, and collection.
+
+Deliverable: complete pickup lifecycle.
+
+05
+
+Live display and production readiness
+
+Add SignalR updates, queue recovery, monitoring, audit review, integration retries, and user acceptance testing.
+
+Deliverable: production-ready application after validation.
+
+### 10\. My recommendation for your first development iteration
+
+Start with these six deliverables, in order:
+
+* SQL Server schema and EF Core entities.
+
+* Angular login and role-based application layout.
+
+* Commercial screen to plan one client with multiple AX sales orders.
+
+* Reception screen that issues one unique daily ticket per client plan.
+
+* Queue display with arrival order and live updates.
+
+* AIF integration proof of concept that reads a customer and its eligible sales orders from AX 2012 R3.
+
+Once that foundation is tested, add credit validation and release, followed by warehouse preparation and collection. This reduces the risk of building a complete UI before confirming the critical AX integration.
+
+One technical point to verify before coding the AX release service: does your warehouse currently release and prepare sales orders through standard AX 2012 R3 functionality, or do you already have a custom AX class/service that performs the release? That determines how we should implement the release operation without bypassing your existing business rules.
+
+If you want, I can:
+
+* Detail API methods for reception and credit workflows
+
+* Specify AX custom AIF service contracts
+
+* Design Angular reactive form workflows for credit and warehouse screens

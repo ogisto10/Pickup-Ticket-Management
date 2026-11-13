@@ -1,0 +1,6 @@
+{
+  "name": "Client Pickup Ticket Management",
+  "description": "Client Pickup Ticket Management application for planning, arrival ticketing, credit validation, AX 2012 R3 sales order release, warehouse preparation, and public queue display.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,43 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+}
+
+.layout-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-body {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+.layout-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+}
+
+.layout-content {
+  flex: 1 1 auto;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+@media (max-width: 991px) {
+  .layout-body {
+    flex-direction: column;
+  }
+
+  .layout-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+  }
+}
