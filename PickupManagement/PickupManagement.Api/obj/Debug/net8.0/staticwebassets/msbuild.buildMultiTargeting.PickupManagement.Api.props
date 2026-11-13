@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\PickupManagement.Api.props" />
-</Project>
