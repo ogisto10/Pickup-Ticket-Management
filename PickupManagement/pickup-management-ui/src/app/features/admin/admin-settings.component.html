@@ -1,8 +1,8 @@
 <div class="flex flex-column gap-4">
   <div>
-    <h2 class="m-0 text-2xl font-bold text-900">Queue and Application Settings</h2>
+    <h2 class="m-0 text-2xl font-bold text-900">{{ 'settings.title' | t }}</h2>
     <p class="m-0 text-600 text-sm">
-      Configure warehouse ticket numbering, time zone, AX company, and operational policies.
+      {{ 'settings.subtitle' | t }}
     </p>
   </div>
 
@@ -10,15 +10,15 @@
     <p-table [value]="settings()" [loading]="loading()" styleClass="p-datatable-sm p-datatable-striped">
       <ng-template pTemplate="header">
         <tr>
-          <th>Warehouse</th>
-          <th>AX Company</th>
-          <th>Ticket Prefix</th>
-          <th>Next Sequence</th>
-          <th>Time Zone</th>
-          <th>Queue Policy</th>
-          <th>Partial Order Policy</th>
-          <th>Arrival Cutoff</th>
-          <th style="width: 7rem">Edit</th>
+          <th>{{ 'app.warehouse' | t }}</th>
+          <th>{{ 'settings.axCompany' | t }}</th>
+          <th>{{ 'settings.ticketPrefix' | t }}</th>
+          <th>{{ 'settings.nextSequence' | t }}</th>
+          <th>{{ 'settings.timeZone' | t }}</th>
+          <th>{{ 'settings.queuePolicy' | t }}</th>
+          <th>{{ 'settings.partialOrderPolicy' | t }}</th>
+          <th>{{ 'settings.arrivalCutoff' | t }}</th>
+          <th style="width: 7rem">{{ 'common.edit' | t }}</th>
         </tr>
       </ng-template>
 
@@ -34,7 +34,7 @@
           <td>{{ s.arrivalCutoffTime || '—' }}</td>
           <td>
             <p-button
-              label="Edit"
+              [label]="'common.edit' | t"
               icon="pi pi-pencil"
               size="small"
               [outlined]="true"
@@ -47,26 +47,26 @@
   </p-card>
 
   <p-dialog
-    [header]="'Edit Settings — ' + (editingWarehouse() || '')"
+    [header]="('settings.editTitle' | t) + ' — ' + (editingWarehouse() || '')"
     [(visible)]="editVisible"
     [modal]="true"
     [style]="{ width: '520px' }"
   >
     <form [formGroup]="form" class="flex flex-column gap-3">
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">AX Company (DataAreaId)</label>
+        <label class="font-semibold text-sm">{{ 'settings.axCompanyFull' | t }}</label>
         <input type="text" pInputText formControlName="axDataAreaId" />
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">Ticket Prefix</label>
+        <label class="font-semibold text-sm">{{ 'settings.ticketPrefix' | t }}</label>
         <input type="text" pInputText formControlName="ticketPrefix" />
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">Business Time Zone (IANA / Windows ID)</label>
+        <label class="font-semibold text-sm">{{ 'settings.businessTimeZoneFull' | t }}</label>
         <input type="text" pInputText formControlName="businessTimeZone" />
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">Queue Policy</label>
+        <label class="font-semibold text-sm">{{ 'settings.queuePolicy' | t }}</label>
         <p-dropdown
           formControlName="queuePolicy"
           [options]="queuePolicies"
@@ -74,7 +74,7 @@
         ></p-dropdown>
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">Partial-Order Policy (Blocked Orders)</label>
+        <label class="font-semibold text-sm">{{ 'settings.partialOrderPolicyFull' | t }}</label>
         <p-dropdown
           formControlName="partialOrderPolicy"
           [options]="partialPolicies"
@@ -82,20 +82,20 @@
         ></p-dropdown>
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm">Daily Absent Cutoff Time (HH:mm:ss)</label>
+        <label class="font-semibold text-sm">{{ 'settings.cutoffLabel' | t }}</label>
         <input type="text" pInputText formControlName="arrivalCutoffTime" placeholder="17:00:00" />
       </div>
     </form>
 
     <ng-template pTemplate="footer">
       <p-button
-        label="Cancel"
+        [label]="'common.cancel' | t"
         severity="secondary"
         [outlined]="true"
         (onClick)="editVisible = false"
       ></p-button>
       <p-button
-        label="Save"
+        [label]="'common.save' | t"
         icon="pi pi-check"
         [loading]="saving()"
         [disabled]="form.invalid || saving()"

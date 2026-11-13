@@ -2,14 +2,14 @@
   <div class="flex justify-content-between align-items-center flex-wrap gap-2">
     <div>
       <h2 class="m-0 text-2xl font-bold text-900">
-        {{ editPlanId() ? 'Edit Pickup Plan' : 'Plan a Client Pickup' }}
+        {{ (editPlanId() ? 'planning.editTitle' : 'planning.createTitle') | t }}
       </h2>
       <p class="m-0 text-600 text-sm">
-        Search customer in AX and select eligible sales orders for pickup.
+        {{ 'planning.createSubtitle' | t }}
       </p>
     </div>
     <p-button
-      label="Back to Plans"
+      [label]="'planning.backToPlans' | t"
       icon="pi pi-arrow-left"
       severity="secondary"
       [outlined]="true"
@@ -21,7 +21,9 @@
     <form [formGroup]="form" (ngSubmit)="savePlan()" class="flex flex-column gap-4">
       <div class="grid">
         <div class="col-12 md:col-4 flex flex-column gap-2">
-          <label for="pickupDate" class="font-semibold text-sm text-700">Pickup Date</label>
+          <label for="pickupDate" class="font-semibold text-sm text-700">
+            {{ 'planning.date' | t }}
+          </label>
           <p-calendar
             inputId="pickupDate"
             formControlName="pickupDate"
@@ -34,7 +36,9 @@
         </div>
 
         <div class="col-12 md:col-4 flex flex-column gap-2">
-          <label for="warehouseId" class="font-semibold text-sm text-700">Warehouse</label>
+          <label for="warehouseId" class="font-semibold text-sm text-700">
+            {{ 'app.warehouse' | t }}
+          </label>
           <input
             id="warehouseId"
             type="text"
@@ -47,7 +51,7 @@
 
         <div class="col-12 md:col-4 flex flex-column gap-2">
           <label for="customerSearch" class="font-semibold text-sm text-700">
-            Search Customer in AX
+            {{ 'planning.searchCustomer' | t }}
           </label>
           <p-autoComplete
             inputId="customerSearch"
@@ -58,7 +62,7 @@
             field="name"
             [dropdown]="true"
             [disabled]="!!editPlanId()"
-            placeholder="Account or name (e.g. 411)"
+            [placeholder]="'planning.customerPlaceholder' | t"
             styleClass="w-full"
             inputStyleClass="w-full"
           >
@@ -69,7 +73,7 @@
                 </span>
                 <p-tag
                   *ngIf="!customer.isActive"
-                  value="Inactive"
+                  [value]="'planning.inactive' | t"
                   severity="danger"
                 ></p-tag>
               </div>
@@ -81,22 +85,22 @@
       <p-message
         *ngIf="alreadyPlannedForDate()"
         severity="warn"
-        text="This customer already has an active pickup plan for the selected date."
+        [text]="'planning.alreadyPlannedWarn' | t"
         styleClass="w-full"
       ></p-message>
 
       <p-message
         *ngIf="selectedCustomerInfo() as cust"
         severity="info"
-        [text]="'Selected AX Customer: ' + cust.accountNum + ' — ' + cust.name"
+        [text]="('planning.selectedCustomer' | t) + ': ' + cust.accountNum + ' — ' + cust.name"
         styleClass="w-full"
       ></p-message>
 
       <div class="flex flex-column gap-2">
         <div class="flex justify-content-between align-items-center">
-          <h3 class="m-0 text-lg font-semibold text-900">Eligible AX Sales Orders</h3>
+          <h3 class="m-0 text-lg font-semibold text-900">{{ 'planning.eligibleOrders' | t }}</h3>
           <span class="text-sm text-600">
-            Selected: {{ selectedSalesIds().size }} order(s)
+            {{ 'planning.selectedCount' | t }}: {{ selectedSalesIds().size }} {{ 'planning.orderUnit' | t }}
           </span>
         </div>
 
@@ -107,13 +111,13 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 3rem">Select</th>
-              <th>Sales Order</th>
-              <th>Order Date</th>
-              <th>Warehouse</th>
-              <th>AX Status</th>
-              <th>Amount</th>
-              <th>Eligibility</th>
+              <th style="width: 3rem">{{ 'planning.select' | t }}</th>
+              <th>{{ 'planning.salesOrder' | t }}</th>
+              <th>{{ 'planning.orderDate' | t }}</th>
+              <th>{{ 'app.warehouse' | t }}</th>
+              <th>{{ 'planning.axStatus' | t }}</th>
+              <th>{{ 'planning.amount' | t }}</th>
+              <th>{{ 'planning.eligibility' | t }}</th>
             </tr>
           </ng-template>
 
@@ -141,7 +145,7 @@
                   ></p-tag>
                   <p-tag
                     *ngIf="order.isAlreadyPlanned && order.existingPlanId !== editPlanId()"
-                    value="Already planned"
+                    [value]="'planning.alreadyPlannedTag' | t"
                     severity="warning"
                   ></p-tag>
                   <small *ngIf="order.ineligibilityReason" class="text-red-600">
@@ -155,7 +159,7 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="7" class="text-center p-4 text-600">
-                Select an active AX customer to retrieve eligible sales orders.
+                {{ 'planning.emptyOrders' | t }}
               </td>
             </tr>
           </ng-template>
@@ -163,26 +167,26 @@
       </div>
 
       <div class="flex flex-column gap-2">
-        <label for="notes" class="font-semibold text-sm text-700">Notes (Optional)</label>
+        <label for="notes" class="font-semibold text-sm text-700">{{ 'common.notesOptional' | t }}</label>
         <textarea
           id="notes"
           pInputTextarea
           rows="2"
           formControlName="notes"
-          placeholder="Client pickup instructions or arrival notes"
+          [placeholder]="'planning.notesPlaceholder' | t"
         ></textarea>
       </div>
 
       <div class="flex justify-content-end gap-2">
         <p-button
-          label="Cancel"
+          [label]="'common.cancel' | t"
           severity="secondary"
           [outlined]="true"
           routerLink="/planning"
         ></p-button>
         <p-button
           type="submit"
-          [label]="editPlanId() ? 'Save Changes' : 'Create Pickup Plan'"
+          [label]="(editPlanId() ? 'common.saveChanges' : 'planning.createSubmit') | t"
           icon="pi pi-check"
           [loading]="saving()"
           [disabled]="form.invalid || selectedSalesIds().size === 0 || saving()"

@@ -10,6 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../core/services/api.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface PickupSettingsDto {
   id: string;
@@ -36,7 +37,8 @@ interface PickupSettingsDto {
     DialogModule,
     InputTextModule,
     DropdownModule,
-    TagModule
+    TagModule,
+    TranslatePipe
   ],
   templateUrl: './admin-settings.component.html'
 })

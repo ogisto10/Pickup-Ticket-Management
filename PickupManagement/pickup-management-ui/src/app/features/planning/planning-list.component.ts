@@ -12,6 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { PlanningService } from '../../core/services/planning.service';
 import { PickupPlanListItem, PickupPlanStatus } from '../../core/models/planning.models';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-planning-list',
@@ -26,7 +27,8 @@ import { PickupPlanListItem, PickupPlanStatus } from '../../core/models/planning
     CalendarModule,
     InputTextModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    TranslatePipe
   ],
   templateUrl: './planning-list.component.html'
 })

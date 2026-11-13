@@ -1,21 +1,21 @@
 <div class="flex flex-column gap-4">
   <div class="flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h2 class="m-0 text-2xl font-bold text-900">Credit Workbench</h2>
+      <h2 class="m-0 text-2xl font-bold text-900">{{ 'credit.title' | t }}</h2>
       <p class="m-0 text-600 text-sm">
-        Review AX financial balances, approve payment/credit, and trigger sales order release.
+        {{ 'credit.subtitle' | t }}
       </p>
     </div>
 
     <div class="flex gap-2">
       <p-button
-        label="Call Next Eligible Ticket"
+        [label]="'credit.callNext' | t"
         icon="pi pi-step-forward"
         [disabled]="loadingQueue()"
         (onClick)="callNextEligibleTicket()"
       ></p-button>
       <p-button
-        label="Refresh"
+        [label]="'common.refresh' | t"
         icon="pi pi-refresh"
         severity="secondary"
         [outlined]="true"
@@ -28,7 +28,7 @@
   <div class="grid">
     <!-- Left Queue Panel (ascending arrival order) -->
     <div class="col-12 lg:col-5">
-      <p-card header="Arrival Queue">
+      <p-card [header]="'credit.arrivalQueue' | t">
         <p-table
           [value]="queue()"
           [loading]="loadingQueue()"
@@ -39,10 +39,10 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th>Queue #</th>
-              <th>Ticket</th>
-              <th>Customer</th>
-              <th>Status</th>
+              <th>{{ 'queue.queueNum' | t }}</th>
+              <th>{{ 'queue.ticket' | t }}</th>
+              <th>{{ 'credit.customer' | t }}</th>
+              <th>{{ 'common.status' | t }}</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-item>
@@ -68,7 +68,7 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="4" class="text-center p-4 text-600">
-                No tickets in today's queue.
+                {{ 'credit.noTickets' | t }}
               </td>
             </tr>
           </ng-template>
@@ -78,9 +78,9 @@
 
     <!-- Right Credit Review & Release Panel -->
     <div class="col-12 lg:col-7">
-      <p-card *ngIf="!context()" header="Ticket Review">
+      <p-card *ngIf="!context()" [header]="'credit.ticketReview' | t">
         <p class="m-0 text-600">
-          Select a ticket from the queue or click "Call Next Eligible Ticket" to begin credit review.
+          {{ 'credit.selectHint' | t }}
         </p>
       </p-card>
 
@@ -89,7 +89,7 @@
           <div>
             <div class="flex align-items-center gap-2">
               <span class="text-3xl font-bold text-primary">{{ ctx.ticket.ticketNumber }}</span>
-              <p-tag [value]="'Queue #' + ctx.ticket.queueNumber" severity="info"></p-tag>
+              <p-tag [value]="('reception.queueBadge' | t) + ctx.ticket.queueNumber" severity="info"></p-tag>
               <p-tag
                 [value]="ctx.ticket.status"
                 [severity]="ticketSeverity(ctx.ticket.status)"
@@ -97,7 +97,7 @@
             </div>
             <div class="text-sm text-700 mt-1">
               <strong>{{ ctx.ticket.customerAccount }}</strong> — {{ ctx.ticket.customerName }}
-              · {{ ctx.orders.length }} sales order(s)
+              · {{ ctx.orders.length }} {{ 'planning.orderUnit' | t }}
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@
         <div class="grid mb-3" *ngIf="ctx.customerCredit as credit">
           <div class="col-12 md:col-4">
             <div class="surface-100 border-round p-3">
-              <div class="text-xs text-600 uppercase">AX Customer Balance</div>
+              <div class="text-xs text-600 uppercase">{{ 'credit.balance' | t }}</div>
               <div class="text-xl font-bold text-900 mt-1">
                 {{ credit.balance | number: '1.2-2' }} {{ credit.currencyCode }}
               </div>
@@ -113,7 +113,7 @@
           </div>
           <div class="col-12 md:col-4">
             <div class="surface-100 border-round p-3">
-              <div class="text-xs text-600 uppercase">AX Credit Limit</div>
+              <div class="text-xs text-600 uppercase">{{ 'credit.limit' | t }}</div>
               <div class="text-xl font-bold text-900 mt-1">
                 {{ credit.creditLimit | number: '1.2-2' }} {{ credit.currencyCode }}
               </div>
@@ -121,7 +121,7 @@
           </div>
           <div class="col-12 md:col-4">
             <div class="surface-100 border-round p-3">
-              <div class="text-xs text-600 uppercase">AX Open Orders</div>
+              <div class="text-xs text-600 uppercase">{{ 'credit.openOrders' | t }}</div>
               <div class="text-xl font-bold text-900 mt-1">
                 {{ credit.openOrdersAmount | number: '1.2-2' }} {{ credit.currencyCode }}
               </div>
@@ -132,19 +132,19 @@
         <p-message
           *ngIf="ctx.customerCredit?.hasCreditBlock"
           severity="error"
-          [text]="'AX Credit Block: ' + (ctx.customerCredit?.blockReason || 'Credit review required')"
+          [text]="('credit.axCreditBlock' | t) + ': ' + (ctx.customerCredit?.blockReason || ('credit.reviewRequired' | t))"
           styleClass="w-full mb-3"
         ></p-message>
 
-        <h3 class="mt-0 mb-2 text-base font-semibold text-900">Sales Order Eligibility</h3>
+        <h3 class="mt-0 mb-2 text-base font-semibold text-900">{{ 'credit.orderEligibility' | t }}</h3>
         <p-table [value]="ctx.orders" styleClass="p-datatable-sm p-datatable-striped mb-3">
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 3rem">Approve</th>
-              <th>Sales Order</th>
-              <th>AX Eligibility</th>
-              <th>Order Status</th>
-              <th style="width: 9rem">AX Release</th>
+              <th style="width: 3rem">{{ 'credit.approveCol' | t }}</th>
+              <th>{{ 'planning.salesOrder' | t }}</th>
+              <th>{{ 'planning.eligibility' | t }}</th>
+              <th>{{ 'credit.orderStatus' | t }}</th>
+              <th style="width: 9rem">{{ 'credit.axRelease' | t }}</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-order>
@@ -178,7 +178,7 @@
               <td>
                 <p-button
                   *ngIf="order.status === 'BLOCKED' || order.status === 'RECONCILING' || order.status === 'RELEASE_PENDING' || order.status === 'PENDING_CREDIT'"
-                  label="Release"
+                  [label]="'credit.releaseBtn' | t"
                   icon="pi pi-send"
                   size="small"
                   [outlined]="true"
@@ -186,7 +186,7 @@
                   (onClick)="releaseSingleOrder(ctx.ticket.ticketId, order.orderId)"
                 ></p-button>
                 <span *ngIf="order.status === 'RELEASED' || order.status === 'IN_PREPARATION' || order.status === 'READY'" class="text-xs text-green-700 font-semibold">
-                  AX Confirmed
+                  {{ 'credit.axConfirmed' | t }}
                 </span>
               </td>
             </tr>
@@ -196,20 +196,20 @@
         <form [formGroup]="decisionForm" class="flex flex-column gap-3">
           <div class="flex flex-column gap-2">
             <label for="creditComment" class="font-semibold text-sm text-700">
-              Decision Comment (mandatory for Hold / Reject)
+              {{ 'credit.decisionComment' | t }}
             </label>
             <textarea
               id="creditComment"
               pInputTextarea
               rows="2"
               formControlName="comment"
-              placeholder="Enter payment verification note or hold/rejection reason"
+              [placeholder]="'credit.commentPlaceholder' | t"
             ></textarea>
           </div>
 
           <div class="flex flex-wrap gap-2 justify-content-end">
             <p-button
-              label="Reject"
+              [label]="'credit.rejectBtn' | t"
               icon="pi pi-times"
               severity="danger"
               [outlined]="true"
@@ -218,7 +218,7 @@
               (onClick)="submitDecision('REJECTED')"
             ></p-button>
             <p-button
-              label="Place On Hold"
+              [label]="'credit.holdBtn' | t"
               icon="pi pi-pause"
               severity="warning"
               [outlined]="true"
@@ -227,7 +227,7 @@
               (onClick)="submitDecision('ON_HOLD')"
             ></p-button>
             <p-button
-              label="Approve & Release in AX"
+              [label]="'credit.approveBtn' | t"
               icon="pi pi-check"
               severity="success"
               [loading]="submitting()"

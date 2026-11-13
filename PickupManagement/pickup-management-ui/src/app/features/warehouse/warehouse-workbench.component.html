@@ -1,14 +1,14 @@
 <div class="flex flex-column gap-4">
   <div class="flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h2 class="m-0 text-2xl font-bold text-900">Warehouse Preparation Workbench</h2>
+      <h2 class="m-0 text-2xl font-bold text-900">{{ 'warehouse.title' | t }}</h2>
       <p class="m-0 text-600 text-sm">
-        Prepare AX-released sales orders, mark readiness, and confirm client collection.
+        {{ 'warehouse.subtitle' | t }}
       </p>
     </div>
 
     <p-button
-      label="Refresh"
+      [label]="'common.refresh' | t"
       icon="pi pi-refresh"
       severity="secondary"
       [outlined]="true"
@@ -27,14 +27,14 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Queue #</th>
-          <th>Ticket</th>
-          <th>Customer Account</th>
-          <th>Customer Name</th>
-          <th>Orders</th>
-          <th style="width: 14rem">Preparation Progress</th>
-          <th>Status</th>
-          <th style="width: 12rem">Actions</th>
+          <th>{{ 'queue.queueNum' | t }}</th>
+          <th>{{ 'queue.ticket' | t }}</th>
+          <th>{{ 'planning.customerAccount' | t }}</th>
+          <th>{{ 'planning.customerName' | t }}</th>
+          <th>{{ 'warehouse.orders' | t }}</th>
+          <th style="width: 14rem">{{ 'warehouse.progress' | t }}</th>
+          <th>{{ 'common.status' | t }}</th>
+          <th style="width: 12rem">{{ 'common.actions' | t }}</th>
         </tr>
       </ng-template>
 
@@ -60,7 +60,7 @@
           </td>
           <td>
             <p-button
-              label="Open Orders"
+              [label]="'warehouse.openOrders' | t"
               icon="pi pi-box"
               size="small"
               [outlined]="true"
@@ -73,7 +73,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="8" class="text-center p-4 text-600">
-            No tickets available for preparation today.
+            {{ 'warehouse.empty' | t }}
           </td>
         </tr>
       </ng-template>
@@ -82,7 +82,7 @@
 
   <!-- Ticket Orders Preparation Dialog -->
   <p-dialog
-    [header]="selectedTicket() ? 'Ticket ' + selectedTicket()!.ticketNumber + ' — Orders' : 'Ticket Orders'"
+    [header]="selectedTicket() ? (('queue.ticket' | t) + ' ' + selectedTicket()!.ticketNumber + ' — ' + ('warehouse.orders' | t)) : ('warehouse.ticketOrdersHeader' | t)"
     [(visible)]="dialogVisible"
     [modal]="true"
     [style]="{ width: '780px' }"
@@ -101,10 +101,10 @@
       <p-table [value]="ticket.orders" styleClass="p-datatable-sm p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
-            <th>Sales Order</th>
-            <th>Status</th>
-            <th>Warehouse Status</th>
-            <th>Actions</th>
+            <th>{{ 'planning.salesOrder' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
+            <th>{{ 'warehouse.warehouseStatus' | t }}</th>
+            <th>{{ 'common.actions' | t }}</th>
           </tr>
         </ng-template>
 
@@ -122,7 +122,7 @@
               <div class="flex gap-2 flex-wrap">
                 <p-button
                   *ngIf="order.status === 'RELEASED'"
-                  label="Start Preparation"
+                  [label]="'warehouse.startPrep' | t"
                   icon="pi pi-play"
                   size="small"
                   [loading]="busy()"
@@ -130,7 +130,7 @@
                 ></p-button>
                 <p-button
                   *ngIf="order.status === 'RELEASED' || order.status === 'IN_PREPARATION'"
-                  label="Mark Ready"
+                  [label]="'warehouse.markReady' | t"
                   icon="pi pi-check"
                   severity="success"
                   size="small"
@@ -139,7 +139,7 @@
                 ></p-button>
                 <p-button
                   *ngIf="order.status === 'BLOCKED' && isSupervisor()"
-                  label="Remove Blocked"
+                  [label]="'warehouse.removeBlocked' | t"
                   icon="pi pi-trash"
                   severity="danger"
                   size="small"
@@ -156,14 +156,14 @@
 
     <ng-template pTemplate="footer">
       <p-button
-        label="Close"
+        [label]="'common.close' | t"
         severity="secondary"
         [outlined]="true"
         (onClick)="dialogVisible = false"
       ></p-button>
       <p-button
         *ngIf="selectedTicket()?.status === 'READY'"
-        label="Confirm Collection"
+        [label]="'warehouse.confirmCollection' | t"
         icon="pi pi-check-circle"
         severity="success"
         [loading]="busy()"

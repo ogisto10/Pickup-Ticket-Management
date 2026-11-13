@@ -6,9 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { AuthService } from '../core/services/auth.service';
 import { APP_ROLES, AppRole } from '../core/models/auth.models';
+import { LanguageSwitcherComponent } from '../core/i18n/language-switcher.component';
+import { TranslatePipe } from '../core/i18n/translate.pipe';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   icon: string;
   route: string;
   roles: readonly AppRole[];
@@ -33,7 +35,9 @@ const ALL_OPERATIONAL_ROLES: readonly AppRole[] = [
     RouterLinkActive,
     ToolbarModule,
     ButtonModule,
-    TagModule
+    TagModule,
+    LanguageSwitcherComponent,
+    TranslatePipe
   ],
   templateUrl: './app-shell.component.html'
 })
@@ -45,61 +49,61 @@ export class AppShellComponent {
 
   private readonly navItems: NavItem[] = [
     {
-      label: 'Operational Dashboard',
+      labelKey: 'nav.dashboard',
       icon: 'pi pi-chart-bar',
       route: '/dashboard',
       roles: ALL_OPERATIONAL_ROLES
     },
     {
-      label: 'Planned Pickups',
+      labelKey: 'nav.planning',
       icon: 'pi pi-calendar',
       route: '/planning',
       roles: [APP_ROLES.Commercial, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'New Pickup Plan',
+      labelKey: 'nav.planningNew',
       icon: 'pi pi-plus-circle',
       route: '/planning/new',
       roles: [APP_ROLES.Commercial, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: "Today's Arrivals",
+      labelKey: 'nav.reception',
       icon: 'pi pi-users',
       route: '/reception',
       roles: [APP_ROLES.Reception, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'Live Ticket Queue',
+      labelKey: 'nav.queue',
       icon: 'pi pi-list',
       route: '/reception/queue',
       roles: [APP_ROLES.Reception, APP_ROLES.CreditManager, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'Credit Workbench',
+      labelKey: 'nav.credit',
       icon: 'pi pi-verified',
       route: '/credit',
       roles: [APP_ROLES.CreditManager]
     },
     {
-      label: 'Warehouse Preparation',
+      labelKey: 'nav.warehouse',
       icon: 'pi pi-box',
       route: '/warehouse',
       roles: [APP_ROLES.WarehouseOperator, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'Public Ticket Display',
+      labelKey: 'nav.display',
       icon: 'pi pi-desktop',
       route: '/pickup-display',
       roles: [APP_ROLES.DisplayDevice, APP_ROLES.Reception, APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'Pickup History',
+      labelKey: 'nav.history',
       icon: 'pi pi-history',
       route: '/history',
       roles: [APP_ROLES.Supervisor, APP_ROLES.Administrator]
     },
     {
-      label: 'Settings',
+      labelKey: 'nav.settings',
       icon: 'pi pi-cog',
       route: '/admin/settings',
       roles: [APP_ROLES.Administrator]

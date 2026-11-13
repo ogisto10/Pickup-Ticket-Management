@@ -1,33 +1,33 @@
 <div class="flex flex-column gap-4">
   <div>
-    <h2 class="m-0 text-2xl font-bold text-900">Pickup History & Audit Trail</h2>
+    <h2 class="m-0 text-2xl font-bold text-900">{{ 'history.title' | t }}</h2>
     <p class="m-0 text-600 text-sm">
-      Search historical tickets and inspect immutable ticket and order workflow transitions.
+      {{ 'history.subtitle' | t }}
     </p>
   </div>
 
   <p-card>
     <div class="flex flex-wrap gap-3 align-items-end mb-4">
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm text-700">From Date</label>
+        <label class="font-semibold text-sm text-700">{{ 'history.fromDate' | t }}</label>
         <p-calendar [(ngModel)]="dateFrom" dateFormat="yy-mm-dd" [showIcon]="true"></p-calendar>
       </div>
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm text-700">To Date</label>
+        <label class="font-semibold text-sm text-700">{{ 'history.toDate' | t }}</label>
         <p-calendar [(ngModel)]="dateTo" dateFormat="yy-mm-dd" [showIcon]="true"></p-calendar>
       </div>
       <div class="flex flex-column gap-2 flex-1" style="min-width: 240px;">
-        <label class="font-semibold text-sm text-700">Search (Ticket, Customer, SO)</label>
+        <label class="font-semibold text-sm text-700">{{ 'history.searchLabel' | t }}</label>
         <input
           type="text"
           pInputText
           [(ngModel)]="search"
-          placeholder="e.g. A-001, 411-021, SO-001258"
+          [placeholder]="'history.searchPlaceholder' | t"
           class="w-full"
         />
       </div>
       <p-button
-        label="Search"
+        [label]="'common.search' | t"
         icon="pi pi-search"
         [loading]="loading()"
         (onClick)="searchHistory()"
@@ -43,14 +43,14 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Date</th>
-          <th>Ticket</th>
-          <th>Customer</th>
-          <th>Orders</th>
-          <th>Status</th>
-          <th>Arrival</th>
-          <th>Collected</th>
-          <th style="width: 8rem">Audit</th>
+          <th>{{ 'history.date' | t }}</th>
+          <th>{{ 'queue.ticket' | t }}</th>
+          <th>{{ 'credit.customer' | t }}</th>
+          <th>{{ 'warehouse.orders' | t }}</th>
+          <th>{{ 'common.status' | t }}</th>
+          <th>{{ 'history.arrival' | t }}</th>
+          <th>{{ 'history.collected' | t }}</th>
+          <th style="width: 8rem">{{ 'history.audit' | t }}</th>
         </tr>
       </ng-template>
 
@@ -65,7 +65,7 @@
           <td>{{ item.collectedAt ? (item.collectedAt | date: 'short') : '—' }}</td>
           <td>
             <p-button
-              label="Trail"
+              [label]="'history.trail' | t"
               icon="pi pi-list"
               size="small"
               [outlined]="true"
@@ -78,21 +78,21 @@
   </p-card>
 
   <p-dialog
-    [header]="audit() ? 'Audit Trail — ' + audit()!.ticketNumber : 'Audit Trail'"
+    [header]="audit() ? (('history.auditTrailTitle' | t) + ' — ' + audit()!.ticketNumber) : ('history.auditTrailTitle' | t)"
     [(visible)]="auditVisible"
     [modal]="true"
     [style]="{ width: '820px' }"
   >
     <div *ngIf="audit() as detail" class="flex flex-column gap-4">
-      <h3 class="m-0 text-base font-semibold">Ticket Workflow Events</h3>
+      <h3 class="m-0 text-base font-semibold">{{ 'history.ticketEvents' | t }}</h3>
       <p-table [value]="detail.ticketEvents" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
-            <th>Time (UTC)</th>
-            <th>Action</th>
-            <th>Transition</th>
-            <th>Actor</th>
-            <th>Comment</th>
+            <th>{{ 'history.timeUtc' | t }}</th>
+            <th>{{ 'history.action' | t }}</th>
+            <th>{{ 'history.transition' | t }}</th>
+            <th>{{ 'history.actor' | t }}</th>
+            <th>{{ 'queue.comment' | t }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-ev>
@@ -106,16 +106,16 @@
         </ng-template>
       </p-table>
 
-      <h3 class="m-0 text-base font-semibold">Order Workflow Events</h3>
+      <h3 class="m-0 text-base font-semibold">{{ 'history.orderEvents' | t }}</h3>
       <p-table [value]="detail.orderEvents" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
-            <th>Time (UTC)</th>
-            <th>Sales Order</th>
-            <th>Action</th>
-            <th>Transition</th>
-            <th>Actor</th>
-            <th>Comment</th>
+            <th>{{ 'history.timeUtc' | t }}</th>
+            <th>{{ 'planning.salesOrder' | t }}</th>
+            <th>{{ 'history.action' | t }}</th>
+            <th>{{ 'history.transition' | t }}</th>
+            <th>{{ 'history.actor' | t }}</th>
+            <th>{{ 'queue.comment' | t }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-ev>

@@ -1,13 +1,16 @@
 <div class="min-h-screen flex align-items-center justify-content-center p-4 surface-ground">
-  <div class="w-full" style="max-width: 420px;">
+  <div class="w-full" style="max-width: 460px;">
     <p-card>
       <ng-template pTemplate="header">
-        <div class="p-4 pb-0 flex align-items-center gap-3">
-          <i class="pi pi-ticket text-primary text-3xl"></i>
-          <div>
-            <h1 class="m-0 text-xl font-bold text-900">Client Pickup Management</h1>
-            <p class="m-0 text-sm text-600">Sign in to access your workstation</p>
+        <div class="p-4 pb-0 flex align-items-start justify-content-between gap-2">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-ticket text-primary text-3xl"></i>
+            <div>
+              <h1 class="m-0 text-xl font-bold text-900">{{ 'app.title' | t }}</h1>
+              <p class="m-0 text-sm text-600">{{ 'app.subtitle' | t }}</p>
+            </div>
           </div>
+          <app-language-switcher></app-language-switcher>
         </div>
       </ng-template>
 
@@ -20,13 +23,13 @@
         ></p-message>
 
         <div class="flex flex-column gap-2">
-          <label for="userName" class="font-semibold text-sm text-700">Username</label>
+          <label for="userName" class="font-semibold text-sm text-700">{{ 'auth.username' | t }}</label>
           <input
             id="userName"
             type="text"
             pInputText
             formControlName="userName"
-            placeholder="Enter your username"
+            [placeholder]="'auth.usernamePlaceholder' | t"
             autocomplete="username"
             class="w-full"
           />
@@ -34,18 +37,18 @@
             class="p-error"
             *ngIf="form.controls.userName.touched && form.controls.userName.invalid"
           >
-            Username is required.
+            {{ 'auth.usernameRequired' | t }}
           </small>
         </div>
 
         <div class="flex flex-column gap-2">
-          <label for="password" class="font-semibold text-sm text-700">Password</label>
+          <label for="password" class="font-semibold text-sm text-700">{{ 'auth.password' | t }}</label>
           <p-password
             inputId="password"
             formControlName="password"
             [feedback]="false"
             [toggleMask]="true"
-            placeholder="Enter your password"
+            [placeholder]="'auth.passwordPlaceholder' | t"
             styleClass="w-full"
             inputStyleClass="w-full"
             autocomplete="current-password"
@@ -54,19 +57,34 @@
             class="p-error"
             *ngIf="form.controls.password.touched && form.controls.password.invalid"
           >
-            Password is required.
+            {{ 'auth.passwordRequired' | t }}
           </small>
         </div>
 
         <p-button
           type="submit"
-          label="Sign In"
+          [label]="'auth.signIn' | t"
           icon="pi pi-sign-in"
           [loading]="loading()"
           [disabled]="form.invalid || loading()"
           styleClass="w-full mt-2"
         ></p-button>
       </form>
+
+      <div class="mt-4 pt-3 border-top-1 surface-border">
+        <div class="text-xs font-semibold text-600 mb-2">{{ 'auth.quickAccess' | t }}</div>
+        <div class="flex flex-wrap gap-1">
+          <p-button
+            *ngFor="let acc of demoAccounts"
+            [label]="acc.label"
+            size="small"
+            severity="secondary"
+            [outlined]="true"
+            type="button"
+            (onClick)="fillDemo(acc.userName)"
+          ></p-button>
+        </div>
+      </div>
     </p-card>
   </div>
 </div>

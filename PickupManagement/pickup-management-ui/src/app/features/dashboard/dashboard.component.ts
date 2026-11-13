@@ -7,6 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { RealtimeService } from '../../core/services/realtime.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface DashboardStats {
   date: string;
@@ -23,7 +24,7 @@ interface DashboardStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CardModule, TagModule, ButtonModule],
+  imports: [CommonModule, CardModule, TagModule, ButtonModule, TranslatePipe],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit, OnDestroy {

@@ -14,6 +14,7 @@ import { RealtimeService } from '../../core/services/realtime.service';
 import { TicketService } from '../../core/services/ticket.service';
 import { WarehouseService } from '../../core/services/warehouse.service';
 import { AuthService } from '../../core/services/auth.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { APP_ROLES } from '../../core/models/auth.models';
 import {
   CollectionResult,
@@ -36,7 +37,8 @@ import {
     ButtonModule,
     TagModule,
     DialogModule,
-    ProgressBarModule
+    ProgressBarModule,
+    TranslatePipe
   ],
   templateUrl: './warehouse-workbench.component.html'
 })

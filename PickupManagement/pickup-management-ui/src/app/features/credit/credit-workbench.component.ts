@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { CreditService } from '../../core/services/credit.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { TicketService } from '../../core/services/ticket.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import {
   CreditDecisionResponse,
   CreditOrderResult,
@@ -34,7 +35,8 @@ import { PickupTicketStatus, TicketQueueItem } from '../../core/models/ticket.mo
     TagModule,
     CheckboxModule,
     InputTextareaModule,
-    MessageModule
+    MessageModule,
+    TranslatePipe
   ],
   templateUrl: './credit-workbench.component.html'
 })

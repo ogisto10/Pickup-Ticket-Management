@@ -1,7 +1,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  font-family: var(--font-family);
+  font-family: 'Plus Jakarta Sans', 'Cairo', var(--font-family), sans-serif;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
@@ -24,6 +24,11 @@ html, body {
   border-right: 1px solid var(--surface-border);
 }
 
+[dir='rtl'] .layout-sidebar {
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
 .layout-content {
   flex: 1 1 auto;
   padding: 1.5rem;
@@ -38,6 +43,7 @@ html, body {
   .layout-sidebar {
     width: 100%;
     border-right: none;
+    border-left: none;
     border-bottom: 1px solid var(--surface-border);
   }
 }

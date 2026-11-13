@@ -11,6 +11,7 @@ import { MessageService } from 'primeng/api';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { TicketService } from '../../core/services/ticket.service';
 import { PickupTicketStatus, TicketQueueItem } from '../../core/models/ticket.models';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-reception-queue',
@@ -22,7 +23,8 @@ import { PickupTicketStatus, TicketQueueItem } from '../../core/models/ticket.mo
     TableModule,
     ButtonModule,
     CalendarModule,
-    TagModule
+    TagModule,
+    TranslatePipe
   ],
   templateUrl: './reception-queue.component.html'
 })
@@ -86,7 +88,7 @@ export class ReceptionQueueComponent implements OnInit, OnDestroy {
     }
   }
 
-  private formatDate(date: Date): string {
+  formatDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');

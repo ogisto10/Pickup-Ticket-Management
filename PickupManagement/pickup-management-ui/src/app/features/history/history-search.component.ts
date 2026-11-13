@@ -10,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../core/services/api.service';
 import { PickupTicketStatus } from '../../core/models/ticket.models';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface TicketHistorySummary {
   ticketId: string;
@@ -62,7 +63,8 @@ interface TicketAuditDetail {
     CalendarModule,
     InputTextModule,
     TagModule,
-    DialogModule
+    DialogModule,
+    TranslatePipe
   ],
   templateUrl: './history-search.component.html'
 })

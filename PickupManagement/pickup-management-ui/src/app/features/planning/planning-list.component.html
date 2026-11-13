@@ -1,13 +1,13 @@
 <div class="flex flex-column gap-4">
   <div class="flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h2 class="m-0 text-2xl font-bold text-900">Planned Pickups</h2>
+      <h2 class="m-0 text-2xl font-bold text-900">{{ 'planning.title' | t }}</h2>
       <p class="m-0 text-600 text-sm">
-        Manage client pickup visits and assigned AX sales orders before arrival.
+        {{ 'planning.subtitle' | t }}
       </p>
     </div>
     <p-button
-      label="New Pickup Plan"
+      [label]="'planning.newBtn' | t"
       icon="pi pi-plus"
       routerLink="/planning/new"
     ></p-button>
@@ -16,7 +16,9 @@
   <p-card>
     <div class="flex flex-wrap gap-3 align-items-end mb-4">
       <div class="flex flex-column gap-2">
-        <label for="pickupDate" class="font-semibold text-sm text-700">Pickup Date</label>
+        <label for="pickupDate" class="font-semibold text-sm text-700">
+          {{ 'planning.date' | t }}
+        </label>
         <p-calendar
           inputId="pickupDate"
           [(ngModel)]="selectedDate"
@@ -27,7 +29,9 @@
       </div>
 
       <div class="flex flex-column gap-2 flex-1" style="min-width: 240px;">
-        <label for="searchTerm" class="font-semibold text-sm text-700">Filter by customer or order</label>
+        <label for="searchTerm" class="font-semibold text-sm text-700">
+          {{ 'planning.filter' | t }}
+        </label>
         <span class="p-input-icon-left w-full">
           <i class="pi pi-search"></i>
           <input
@@ -35,14 +39,14 @@
             type="text"
             pInputText
             [(ngModel)]="searchText"
-            placeholder="Customer account, name, or SO number"
+            [placeholder]="'planning.filterPlaceholder' | t"
             class="w-full"
           />
         </span>
       </div>
 
       <p-button
-        label="Refresh"
+        [label]="'common.refresh' | t"
         icon="pi pi-refresh"
         severity="secondary"
         [outlined]="true"
@@ -60,13 +64,13 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Customer Account</th>
-          <th>Customer Name</th>
-          <th>Warehouse</th>
-          <th>Sales Orders</th>
-          <th>Status</th>
-          <th>Created By</th>
-          <th style="width: 8rem">Actions</th>
+          <th>{{ 'planning.customerAccount' | t }}</th>
+          <th>{{ 'planning.customerName' | t }}</th>
+          <th>{{ 'app.warehouse' | t }}</th>
+          <th>{{ 'planning.salesOrders' | t }}</th>
+          <th>{{ 'common.status' | t }}</th>
+          <th>{{ 'planning.createdBy' | t }}</th>
+          <th style="width: 8rem">{{ 'common.actions' | t }}</th>
         </tr>
       </ng-template>
 
@@ -95,12 +99,14 @@
             <p-button
               *ngIf="plan.status === 'PLANNED'"
               icon="pi pi-pencil"
-              label="Edit"
+              [label]="'common.edit' | t"
               size="small"
               [outlined]="true"
               [routerLink]="['/planning', plan.id, 'edit']"
             ></p-button>
-            <span *ngIf="plan.status !== 'PLANNED'" class="text-xs text-500">Locked</span>
+            <span *ngIf="plan.status !== 'PLANNED'" class="text-xs text-500">
+              {{ 'common.locked' | t }}
+            </span>
           </td>
         </tr>
       </ng-template>
@@ -108,7 +114,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="7" class="text-center p-4 text-600">
-            No pickup plans found for {{ formatDate(selectedDate) }}.
+            {{ 'planning.empty' | t }} {{ formatDate(selectedDate) }}.
           </td>
         </tr>
       </ng-template>

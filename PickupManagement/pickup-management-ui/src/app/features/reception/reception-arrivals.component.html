@@ -1,13 +1,13 @@
 <div class="flex flex-column gap-4">
   <div class="flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-      <h2 class="m-0 text-2xl font-bold text-900">Reception — Planned Arrivals</h2>
+      <h2 class="m-0 text-2xl font-bold text-900">{{ 'reception.title' | t }}</h2>
       <p class="m-0 text-600 text-sm">
-        Confirm client arrival and issue a unique daily pickup ticket.
+        {{ 'reception.subtitle' | t }}
       </p>
     </div>
     <p-button
-      label="Walk-In Arrival"
+      [label]="'reception.walkInBtn' | t"
       icon="pi pi-user-plus"
       severity="secondary"
       [outlined]="true"
@@ -18,7 +18,9 @@
   <p-card>
     <div class="flex flex-wrap gap-3 align-items-end mb-4">
       <div class="flex flex-column gap-2">
-        <label for="arrivalDate" class="font-semibold text-sm text-700">Planned Date</label>
+        <label for="arrivalDate" class="font-semibold text-sm text-700">
+          {{ 'reception.plannedDate' | t }}
+        </label>
         <div class="flex gap-2 align-items-center">
           <p-calendar
             inputId="arrivalDate"
@@ -28,14 +30,14 @@
             (onSelect)="loadPlans()"
           ></p-calendar>
           <p-button
-            label="Today"
+            [label]="'common.today' | t"
             size="small"
             severity="secondary"
             [outlined]="true"
             (onClick)="selectDateOffset(0)"
           ></p-button>
           <p-button
-            label="Tomorrow"
+            [label]="'common.tomorrow' | t"
             size="small"
             severity="secondary"
             [outlined]="true"
@@ -46,7 +48,7 @@
 
       <div class="flex flex-column gap-2 flex-1" style="min-width: 240px;">
         <label for="searchClient" class="font-semibold text-sm text-700">
-          Search by account or customer name
+          {{ 'reception.searchClient' | t }}
         </label>
         <span class="p-input-icon-left w-full">
           <i class="pi pi-search"></i>
@@ -55,14 +57,14 @@
             type="text"
             pInputText
             [(ngModel)]="searchText"
-            placeholder="e.g. 411-021 or Atlas"
+            [placeholder]="'reception.searchPlaceholder' | t"
             class="w-full"
           />
         </span>
       </div>
 
       <p-button
-        label="Refresh"
+        [label]="'common.refresh' | t"
         icon="pi pi-refresh"
         severity="secondary"
         [outlined]="true"
@@ -80,12 +82,12 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th>Customer Account</th>
-          <th>Customer Name</th>
-          <th>Warehouse</th>
-          <th>Sales Orders</th>
-          <th>Plan Status</th>
-          <th style="width: 14rem">Action</th>
+          <th>{{ 'planning.customerAccount' | t }}</th>
+          <th>{{ 'planning.customerName' | t }}</th>
+          <th>{{ 'app.warehouse' | t }}</th>
+          <th>{{ 'planning.salesOrders' | t }}</th>
+          <th>{{ 'reception.planStatus' | t }}</th>
+          <th style="width: 14rem">{{ 'common.actions' | t }}</th>
         </tr>
       </ng-template>
 
@@ -112,7 +114,7 @@
           <td>
             <p-button
               *ngIf="plan.status === 'PLANNED'"
-              label="Confirm Arrival"
+              [label]="'reception.confirmArrival' | t"
               icon="pi pi-ticket"
               size="small"
               [loading]="issuingPlanId() === plan.id"
@@ -121,7 +123,7 @@
             ></p-button>
             <p-button
               *ngIf="plan.status === 'ARRIVED'"
-              label="View Ticket"
+              [label]="'reception.viewTicket' | t"
               icon="pi pi-eye"
               size="small"
               severity="secondary"
@@ -136,7 +138,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="6" class="text-center p-4 text-600">
-            No planned pickups found for {{ formatDate(selectedDate) }}.
+            {{ 'reception.noPlanned' | t }} {{ formatDate(selectedDate) }}.
           </td>
         </tr>
       </ng-template>
@@ -145,31 +147,31 @@
 
   <!-- Issued Ticket Dialog -->
   <p-dialog
-    header="Pickup Ticket Issued"
+    [header]="'reception.ticketDialogTitle' | t"
     [(visible)]="ticketDialogVisible"
     [modal]="true"
     [style]="{ width: '420px' }"
   >
     <div *ngIf="issuedTicket() as ticket" class="flex flex-column align-items-center gap-3 py-2 text-center">
-      <div class="text-sm text-600">Daily Ticket Number</div>
+      <div class="text-sm text-600">{{ 'reception.dailyNumber' | t }}</div>
       <div class="text-5xl font-bold text-primary">{{ ticket.ticketNumber }}</div>
-      <p-tag [value]="'Queue #' + ticket.queueNumber" severity="info"></p-tag>
+      <p-tag [value]="('reception.queueBadge' | t) + ticket.queueNumber" severity="info"></p-tag>
 
       <div class="w-full border-top-1 surface-border pt-3 text-left flex flex-column gap-2 text-sm">
         <div class="flex justify-content-between">
-          <span class="text-600">Customer:</span>
+          <span class="text-600">{{ 'reception.customer' | t }}:</span>
           <span class="font-semibold">{{ ticket.customerAccount }} — {{ ticket.customerName }}</span>
         </div>
         <div class="flex justify-content-between">
-          <span class="text-600">Sales Orders:</span>
+          <span class="text-600">{{ 'planning.salesOrders' | t }}:</span>
           <span class="font-semibold">{{ ticket.orderCount }}</span>
         </div>
         <div class="flex justify-content-between">
-          <span class="text-600">Arrival Time (UTC):</span>
+          <span class="text-600">{{ 'reception.arrivalTimeUtc' | t }}:</span>
           <span class="font-semibold">{{ ticket.arrivalTime | date: 'medium' }}</span>
         </div>
         <div class="flex justify-content-between">
-          <span class="text-600">Status:</span>
+          <span class="text-600">{{ 'common.status' | t }}:</span>
           <p-tag [value]="ticket.status" severity="success"></p-tag>
         </div>
       </div>
@@ -177,14 +179,14 @@
 
     <ng-template pTemplate="footer">
       <p-button
-        label="Print Ticket"
+        [label]="'reception.printTicket' | t"
         icon="pi pi-print"
         severity="secondary"
         [outlined]="true"
         (onClick)="printTicket()"
       ></p-button>
       <p-button
-        label="Done"
+        [label]="'common.done' | t"
         icon="pi pi-check"
         (onClick)="ticketDialogVisible = false"
       ></p-button>
@@ -193,14 +195,14 @@
 
   <!-- Authorized Walk-In Dialog -->
   <p-dialog
-    header="Authorized Walk-In Arrival"
+    [header]="'reception.walkInTitle' | t"
     [(visible)]="walkInDialogVisible"
     [modal]="true"
     [style]="{ width: '680px' }"
   >
     <div class="flex flex-column gap-3">
       <div class="flex flex-column gap-2">
-        <label class="font-semibold text-sm text-700">Search Customer in AX</label>
+        <label class="font-semibold text-sm text-700">{{ 'planning.searchCustomer' | t }}</label>
         <p-autoComplete
           [(ngModel)]="walkInCustomer"
           [suggestions]="walkInCustomerSuggestions()"
@@ -208,7 +210,7 @@
           (onSelect)="onWalkInCustomerSelected($event.value)"
           field="name"
           [dropdown]="true"
-          placeholder="Account or customer name"
+          [placeholder]="'reception.accountOrName' | t"
           styleClass="w-full"
           inputStyleClass="w-full"
         ></p-autoComplete>
@@ -221,10 +223,10 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 3rem">Select</th>
-            <th>Sales Order</th>
-            <th>AX Status</th>
-            <th>Eligibility</th>
+            <th style="width: 3rem">{{ 'planning.select' | t }}</th>
+            <th>{{ 'planning.salesOrder' | t }}</th>
+            <th>{{ 'planning.axStatus' | t }}</th>
+            <th>{{ 'planning.eligibility' | t }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-order>
@@ -241,7 +243,7 @@
             <td>{{ order.axStatus }}</td>
             <td>
               <p-tag
-                [value]="order.isAlreadyPlanned ? 'Already planned' : order.eligibilityStatus"
+                [value]="order.isAlreadyPlanned ? ('planning.alreadyPlannedTag' | t) : order.eligibilityStatus"
                 [severity]="order.isEligible && !order.isAlreadyPlanned ? 'success' : 'warning'"
               ></p-tag>
             </td>
@@ -252,13 +254,13 @@
 
     <ng-template pTemplate="footer">
       <p-button
-        label="Cancel"
+        [label]="'common.cancel' | t"
         severity="secondary"
         [outlined]="true"
         (onClick)="walkInDialogVisible = false"
       ></p-button>
       <p-button
-        label="Issue Walk-In Ticket"
+        [label]="'reception.issueWalkIn' | t"
         icon="pi pi-ticket"
         [loading]="issuingWalkIn()"
         [disabled]="!walkInCustomer || walkInSelectedOrders().size === 0 || issuingWalkIn()"

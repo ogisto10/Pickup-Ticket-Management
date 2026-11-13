@@ -11,6 +11,8 @@ import { PasswordModule } from 'primeng/password';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginResponse } from '../../core/models/auth.models';
+import { LanguageSwitcherComponent } from '../../core/i18n/language-switcher.component';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +24,9 @@ import { LoginResponse } from '../../core/models/auth.models';
     InputTextModule,
     PasswordModule,
     ButtonModule,
-    MessageModule
+    MessageModule,
+    LanguageSwitcherComponent,
+    TranslatePipe
   ],
   templateUrl: './login.component.html'
 })
@@ -39,6 +43,20 @@ export class LoginComponent {
     userName: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
+
+  readonly demoAccounts = [
+    { userName: 'admin', label: 'Administrator' },
+    { userName: 'commercial', label: 'Commercial' },
+    { userName: 'reception', label: 'Reception' },
+    { userName: 'credit', label: 'CreditManager' },
+    { userName: 'warehouse', label: 'WarehouseOperator' },
+    { userName: 'supervisor', label: 'Supervisor' },
+    { userName: 'display', label: 'DisplayDevice' }
+  ];
+
+  fillDemo(userName: string): void {
+    this.form.patchValue({ userName, password: 'PickupDev!2026' });
+  }
 
   submit(): void {
     if (this.form.invalid || this.loading()) {

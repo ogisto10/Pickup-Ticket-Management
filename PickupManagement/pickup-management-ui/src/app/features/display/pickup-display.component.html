@@ -1,8 +1,32 @@
 <div class="min-h-screen surface-900 text-0 p-5 flex flex-column gap-5">
+  <div class="flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="flex align-items-center gap-2">
+      <p-button
+        *ngIf="canReturnToConsole()"
+        [label]="'display.back' | t"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        routerLink="/dashboard"
+      ></p-button>
+      <p-button
+        *ngIf="!canReturnToConsole()"
+        [label]="'auth.signOut' | t"
+        icon="pi pi-sign-out"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="signOut()"
+      ></p-button>
+    </div>
+    <app-language-switcher></app-language-switcher>
+  </div>
+
   <header class="text-center border-bottom-1 surface-border pb-4">
-    <h1 class="m-0 text-5xl font-bold tracking-wider">CLIENT PICKUP</h1>
+    <h1 class="m-0 text-5xl font-bold tracking-wider">{{ 'display.title' | t }}</h1>
     <p class="m-0 mt-2 text-2xl text-300">
-      Please proceed to the collection counter when your number appears.
+      {{ 'display.subtitle' | t }}
     </p>
   </header>
 
@@ -10,16 +34,16 @@
     <div class="col-12 lg:col-5">
       <div class="surface-800 border-round-xl p-5 text-center h-full flex flex-column justify-content-center align-items-center gap-3">
         <div class="text-xl uppercase tracking-widest text-primary-300 font-semibold">
-          NOW SERVING
+          {{ 'display.nowServing' | t }}
         </div>
         <div class="text-8xl font-bold text-primary-300">
           {{ state()?.nowServingTicketNumber || '---' }}
         </div>
         <div class="text-lg text-300" *ngIf="state()?.nowServingTicketNumber">
-          Please proceed to the pickup counter.
+          {{ 'display.proceed' | t }}
         </div>
         <div class="text-lg text-400" *ngIf="!state()?.nowServingTicketNumber">
-          Waiting for next ready ticket
+          {{ 'display.waiting' | t }}
         </div>
       </div>
     </div>
@@ -28,10 +52,10 @@
       <div class="surface-800 border-round-xl p-5 h-full flex flex-column gap-4">
         <div class="flex justify-content-between align-items-center">
           <h2 class="m-0 text-2xl uppercase tracking-wider text-green-400">
-            ORDERS READY
+            {{ 'display.ordersReady' | t }}
           </h2>
           <p-tag
-            [value]="(state()?.inPreparationCount ?? 0) + ' in preparation'"
+            [value]="(state()?.inPreparationCount ?? 0) + ' ' + ('display.inPrep' | t)"
             severity="info"
           ></p-tag>
         </div>
@@ -45,14 +69,14 @@
               <div class="text-4xl font-bold text-green-400">
                 {{ ticket.ticketNumber }}
               </div>
-              <div class="text-sm text-300 mt-1">Ready for collection</div>
+              <div class="text-sm text-300 mt-1">{{ 'display.readyForCollection' | t }}</div>
             </div>
           </div>
         </div>
 
         <ng-template #noReady>
           <div class="text-center py-6 text-400 text-xl">
-            No tickets currently ready for collection.
+            {{ 'display.noReady' | t }}
           </div>
         </ng-template>
       </div>

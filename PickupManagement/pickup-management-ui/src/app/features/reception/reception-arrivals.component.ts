@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { ApiService } from '../../core/services/api.service';
 import { PlanningService } from '../../core/services/planning.service';
 import { TicketService } from '../../core/services/ticket.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import {
   AxCustomer,
   CustomerOrderLookup,
@@ -38,7 +39,8 @@ import { ArrivalTicketResponse } from '../../core/models/ticket.models';
     TagModule,
     DialogModule,
     AutoCompleteModule,
-    CheckboxModule
+    CheckboxModule,
+    TranslatePipe
   ],
   templateUrl: './reception-arrivals.component.html'
 })

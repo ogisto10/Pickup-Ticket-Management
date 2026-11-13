@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
@@ -15,6 +15,7 @@ import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { PlanningService } from '../../core/services/planning.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import {
   AxCustomer,
   CustomerOrderLookup,
@@ -27,6 +28,7 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterLink,
     CardModule,
@@ -38,7 +40,8 @@ import {
     TableModule,
     CheckboxModule,
     TagModule,
-    MessageModule
+    MessageModule,
+    TranslatePipe
   ],
   templateUrl: './planning-new.component.html'
 })
